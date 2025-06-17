@@ -33,4 +33,11 @@ app.get('/parser', async (req, res) => {
       date: data.date_published || '',
       content: textContent
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
