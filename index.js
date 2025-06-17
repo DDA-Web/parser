@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 import { load } from 'cheerio';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080; // Railway écoute souvent sur 8080
 
 app.use(cors());
 
@@ -22,7 +22,10 @@ app.get('/parser', async (req, res) => {
       }
     });
 
-    const data = await response.json();
+    const text = await response.text(); // on récupère du texte brut
+    console.log('RESPONSE FROM MERCURY:\n', text); // <-- ce log apparaîtra dans Railway
+
+    const data = JSON.parse(text); // on parse ensuite
 
     const $ = load(data.content || '');
     const textContent = $('body').text().replace(/\s+/g, ' ').trim();
@@ -34,6 +37,7 @@ app.get('/parser', async (req, res) => {
       content: textContent
     });
   } catch (error) {
+    console.error('ERROR:\n', error); // pour voir les erreurs dans les logs Railway
     res.status(500).json({ error: error.message });
   }
 });
