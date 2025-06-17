@@ -1,10 +1,10 @@
+// index.js
 import express from 'express';
 import cors from 'cors';
-import fetch from 'node-fetch';
-import { load } from 'cheerio';
+import { Mercury } from '@postlight/parser';
 
 const app = express();
-const PORT = process.env.PORT || 8080; // Railway écoute souvent sur 8080
+const PORT = process.env.PORT || 8080;
 
 app.use(cors());
 
@@ -16,28 +16,15 @@ app.get('/parser', async (req, res) => {
   }
 
   try {
-    const response = await fetch(`https://mercury.postlight.com/parser?url=${encodeURIComponent(url)}`, {
-      headers: {
-        'x-api-key': 'demo'
-      }
-    });
-
-    const text = await response.text(); // on récupère du texte brut
-    console.log('RESPONSE FROM MERCURY:\n', text); // <-- ce log apparaîtra dans Railway
-
-    const data = JSON.parse(text); // on parse ensuite
-
-    const $ = load(data.content || '');
-    const textContent = $('body').text().replace(/\s+/g, ' ').trim();
+    const result = await Mercury.parse(url);
 
     res.json({
-      title: data.title || '',
-      author: data.author || '',
-      date: data.date_published || '',
-      content: textContent
+      title: result.title || '',
+      author: result.author || '',
+      date: result.date_published || '',
+      content: result.content ? result.content.replace(/\s+/g, ' ').trim() : ''
     });
   } catch (error) {
-    console.error('ERROR:\n', error); // pour voir les erreurs dans les logs Railway
     res.status(500).json({ error: error.message });
   }
 });
