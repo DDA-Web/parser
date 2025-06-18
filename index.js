@@ -1,10 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import fetch from 'node-fetch';
-import cheerio from 'cheerio';
-import parser from '@postlight/parser'; // CommonJS module
-
-const { Mercury } = parser;
+import Mercury from '@postlight/parser';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -19,21 +15,22 @@ app.get('/parser', async (req, res) => {
   }
 
   try {
-    const result = await Mercury.parse(url);
-    const $ = cheerio.load(result.content || '');
-    const cleanText = $('body').text().replace(/\s+/g, ' ').trim();
+    const result = await Mercury.parse(url, {
+      contentType: 'html' // <- cette option est OK à garder, elle aide à forcer l’analyse HTML brute
+    });
 
     res.json({
       title: result.title || '',
       author: result.author || '',
       date: result.date_published || '',
-      content: cleanText,
+      content: result.content || '',
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Parser error:', error);
+    res.status(500).json({ error: 'Parsing failed' });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
